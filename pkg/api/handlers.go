@@ -2,36 +2,41 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
 	"net/http"
+	"time"
 )
 
-// TaskServer - это структура-контейнер (сервер задач)
-// Она инкапсулирует в себя пул соединений с БД, чтобы методы-обработчики
-// имели к нему прямой доступ без использования глобальных переменных.
+// TaskServer представляет НТТР-сервер для управления задачами.
 type TaskServer struct {
 	DB *sql.DB
 }
 
-// NewTaskServer - функция-конструктор. Main создаёт базу, server передаёт её сюда,
-// а мы возвращаем готовый объект для обслуживания НТТР-запросов.
-func NewTaskServer(db *sql.DB) *TaskServer {
+// NewTaskServer создает и возвращает новый экземпляр TaskServer.
+func NewTaskServer(database *sql.DB) *TaskServer {
 	return &TaskServer{
-		DB: db,
+		DB: database,
 	}
 }
 
-// AddHandler обрабатывает POST-запросы на добавление задач (/api/task).
-// Пока это заглушка, возвращающая текстовый маркер.
-func (ts *TaskServer) AddHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprintln(w, "[STUB] Обработчик AddHandler успешно вызван. Логика добавления задачи будет здесь.")
-}
-
-// NextDateHandler обрабатывает GET-запросы для вычисления дат (/api/nextdate).
+// NextDateHandler обрабатывает запрос на вычисление следующей даты задачи.
 func (ts *TaskServer) NextDateHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	now := time.Now()
+
+	if nowValue := r.FormValue("now"); nowValue != "" {
+		parsedNow, err := time.Parse(dateFormat, nowValue)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		now = parsedNow
+	}
+	NextDate, err := NextDate(now, r.FormValue("date"), r.FormValue("repeat"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = fmt.Fprintln(w, "[STUB] Обработчик NextDateHandler успешно вызван. Логика расчета дат будет здесь.")
+	_, _ = w.Write([]byte(NextDate))
 }
