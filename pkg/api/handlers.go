@@ -30,7 +30,7 @@ func (ts *TaskServer) NextDateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		now = parsedNow
 	}
-	NextDate, err := NextDate(now, r.FormValue("date"), r.FormValue("repeat"))
+	nextDate, err := NextDate(now, r.FormValue("date"), r.FormValue("repeat"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -38,5 +38,5 @@ func (ts *TaskServer) NextDateHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write([]byte(NextDate))
+	_, _ = w.Write([]byte(nextDate))
 }
