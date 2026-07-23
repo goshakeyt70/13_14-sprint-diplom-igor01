@@ -23,7 +23,7 @@ func Run(todoPort string, db *sql.DB) {
 
 	logger.Println("Регистрация сетевых маршрутов API планировщика...")
 	router.HandleFunc("/api/task", taskServer.TaskHandler)
-	router.HandleFunc("/api/tasks", taskServer.TaskHandler)
+	router.HandleFunc("/api/tasks", taskServer.TasksHandler)
 	router.HandleFunc("/api/task/done", taskServer.DoneHandler)
 	router.HandleFunc("/api/nextdate", taskServer.NextDateHandler)
 

@@ -1,9 +1,3 @@
-//========
-// Д - нет
-// сделать комменты - проф
-// скинуть на GitHub
-//========
-
 package api
 
 import (
@@ -27,7 +21,12 @@ type jsonResponse struct {
 }
 
 // AddHandler обрабатывает запрос на добавление новой задачи.
-func (ts *TaskServer) AddHandler(w http.ResponseWriter, r *http.Request) {
+func (ts *TaskServer) AddHandler(w http.ResponseWriter, r *http.Request) {	
+	if r.Method != http.MethodPost {
+		writeJSON(w, http.StatusMethodNotAllowed, jsonResponse{Error: "Метод не поддерживается"})
+		return
+	}
+	
 	var task db.Task
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
@@ -100,7 +99,7 @@ func checkDate(task *db.Task) error {
 // writeJSON сериализует данные в формате JSON, устанавливает заголовок Content-Type
 // и отправляет НТТР-статус.
 func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Context-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.WriteHeader(status)
 
 	_ = json.NewEncoder(w).Encode(data)
