@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Ошибки бизнес-логики при обработке правил повторения задач. 
+// Ошибки бизнес-логики при обработке правил повторения задач.
 var (
 	ErrEmptyRepeat   = errors.New("правило повторения не может быть пустой строкой")
 	ErrUnknownRule   = errors.New("указано неизвестное правило повторения")
@@ -23,7 +23,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	if repeat == "" {
 		return "", ErrEmptyRepeat
 	}
-	
+
 	startDate, err := time.Parse(dateFormat, dstart)
 	if err != nil {
 		return "", fmt.Errorf("неверный формат стартовой даты %q: %w", dstart, err)
@@ -31,15 +31,19 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	// Сбрасыаем время у now для корректного сравнения календарных дан.
 	now = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	
+
 	parts := strings.Fields(repeat)
 	rule := parts[0]
 
 	switch rule {
-	case "y":		
+	case "y":
+		if len(parts) != 1 {
+			return "", fmt.Errorf("%w: правило 'y' не должно содержать параметры", ErrInvalidFormat)
+		}
+
 		next := startDate
 		for {
-			next := next.AddDate(1, 0, 0)
+			next = next.AddDate(1, 0, 0)
 			if next.After(now) {
 				return next.Format(dateFormat), nil
 			}
@@ -53,20 +57,16 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			return "", fmt.Errorf("%w: некорректный интервал дней (ожидается от 1 до 400)", ErrInvalidFormat)
 		}
 
-		// Выполняем математический прыжок по дням, если стартовая дата далеко в прошлом. 
+		// Выполняем математический прыжок по дням, если стартовая дата далеко в прошлом.
 		next := startDate
-		if next.Before(now) {
-			diffDays := int(now.Sub(next).Hours() / 24)
-			if diffDays > days {				
-				interfals := diffDays / days
-				next = next.AddDate(0, 0, interfals*days)
+
+		for {
+			next = next.AddDate(0, 0, days)
+
+			if next.After(now) {
+				return next.Format(dateFormat), nil
 			}
 		}
-		
-		for !next.After(now) {
-			next = next.AddDate(0, 0, days)
-		}
-		return next.Format(dateFormat), nil
 
 	case "w":
 		if len(parts) < 2 {
@@ -88,7 +88,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 			activeDays[dayNum] = true
 		}
-		
+
 		next := startDate
 		for {
 			next = next.AddDate(0, 0, 1)
@@ -101,7 +101,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		if len(parts) < 2 {
 			return "", fmt.Errorf("%w: для правила 'm' не указаны дни месяца", ErrInvalidFormat)
 		}
-		
+
 		dayParts := strings.Split(parts[1], ",")
 		allowedDays := make([]int, 0, len(dayParts))
 		for _, dStr := range dayParts {
@@ -111,7 +111,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 			allowedDays = append(allowedDays, d)
 		}
-		
+
 		allowedMonths := make([]bool, 13) // от 1 до 12 для прямой адресации.
 		hasMonthFilter := false
 		if len(parts) >= 3 {
@@ -137,7 +137,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 			// Определяем последний день месяца путем получения нулевого дня следующего месяца.
 			lastDayOfMonth := time.Date(next.Year(), next.Month()+1, 0, 0, 0, 0, 0, next.Location()).Day()
-			
+
 			dayMatch := false
 			for _, d := range allowedDays {
 				if d > 0 && next.Day() == d {
