@@ -1,0 +1,21 @@
+# --- Go binaries
+*.exe
+*.out
+*__debug_bin
+/test_bin
+
+# --- SQLite database
+scheduler.db 
+*.db
+*.sqlite 
+*.sqlite3
+
+# --- IDE
+.vscode
+
+# --- Logs
+*.log
+
+# --- OS files
+.DS_Store
+Thumbs.db
